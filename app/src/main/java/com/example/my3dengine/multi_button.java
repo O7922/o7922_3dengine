@@ -13,6 +13,8 @@ public class multi_button extends View {
 
     Paint zPaint = new Paint();
     Paint gPaint = new Paint();
+    Paint wPaint = new Paint();
+
     int disp_w,disp_h;
     float standard_size;
     int tX,tY;
@@ -24,14 +26,17 @@ public class multi_button extends View {
             {2,0,2}
     };
 
+    String button_txt[][] = new String[3][3];
+
     public multi_button(Context context, AttributeSet attrs){
         super(context,attrs);
         zPaint.setTextSize(30);
         gPaint.setColor(Color.GRAY);
+        wPaint.setColor(Color.WHITE);
     }
 
-    public void set_up_this(int b[][]){
-        button = b;
+    public void set_up_this(int b[][],String s[][]){
+        button = b;button_txt = s;
     }
 
     public void setXY(int x,int y){
@@ -44,6 +49,7 @@ public class multi_button extends View {
         disp_w = this.getWidth();
         disp_h = this.getHeight();
         standard_size = (float) disp_w / (float)3;
+        wPaint.setTextSize(standard_size*0.7f);
     }
 
     public void onDraw(Canvas canvas){
@@ -66,6 +72,15 @@ public class multi_button extends View {
                 }
                 if(button[i][j] == 1){
                     canvas.drawRect(j * standard_size,i*standard_size,j*standard_size+standard_size,i*standard_size+standard_size,gPaint);
+                }
+            }
+        }
+
+        //描画
+        for (int i = 0; i < 3; i ++){
+            for (int j = 0; j < 3; j ++){
+                if(button_txt[i][j] != null){
+                    canvas.drawText("" + button_txt[i][j],j * standard_size+standard_size*0.1f,i*standard_size+standard_size*0.7f,wPaint);
                 }
             }
         }

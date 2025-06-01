@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <com.example.my3dengine.MyView
+    <com.example.my3dengine.my3d_engine
         android:id="@+id/mv"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

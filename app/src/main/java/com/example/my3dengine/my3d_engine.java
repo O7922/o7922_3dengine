@@ -13,10 +13,10 @@ import android.graphics.Shader;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
-
 import java.util.ArrayList;
 
-public class MyView extends View {
+//3Dエンジンの心臓部にあたるクラス。ココで透視投影後の座標計算や実際の描画そのものを行なう
+public class my3d_engine extends View {
 
     Paint zPaint = new Paint();
     Paint rPaint = new Paint();
@@ -34,22 +34,19 @@ public class MyView extends View {
 
     ArrayList<Polygon> Polygon_List = new ArrayList<Polygon>();
 
-    //test tt;
-
     float centerX,centerY;
 
     float plX=0,plY=0,plZ=0;//プレイヤー座標
-
-    float per_mode = 1;
 
     int uraomote = 1;
 
     multi_button mb1,mb2;
 
-    public MyView(Context context, AttributeSet attrs) {
+    public my3d_engine(Context context, AttributeSet attrs) {
         super(context, attrs);
         zPaint.setTextSize(50);
         rPaint.setColor(Color.RED);
+
 
         Bitmap bmp = BitmapFactory.decodeResource(getResources(),R.drawable.tile0);
         Bitmap s_bmp = Bitmap.createScaledBitmap(bmp,1024,1024,true);
@@ -62,11 +59,7 @@ public class MyView extends View {
         Bitmap src_cross = BitmapFactory.decodeResource(getResources(),R.drawable.cross);
         Bitmap cross = Bitmap.createScaledBitmap(src_cross,120,120,true);
 
-
-
-
         //ポリゴンの配置
-
         Polygon_List.add(new Polygon(
                 8000,8000,-8000,
                 8001,-8000,-8000,

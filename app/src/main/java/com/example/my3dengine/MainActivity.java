@@ -3,20 +3,15 @@ package com.example.my3dengine;
 import android.os.Bundle;
 
 import android.view.Display;
-import android.view.MotionEvent;
-import android.view.View;
 import android.widget.Button;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
 public class MainActivity extends AppCompatActivity {
 
     Button mode;
-    MyView mv;
+    my3d_engine mv;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,8 +34,13 @@ public class MainActivity extends AppCompatActivity {
                 {0,2,0},
                 {2,0,2}
         };
+        String button_txt1[][] = {
+                {"","前",""},
+                {"左","","右"},
+                {"","後",""}
+        };
         mb1.setXY(0 + disp_w/6,disp_h/2);//位置
-        mb1.set_up_this(button1);
+        mb1.set_up_this(button1,button_txt1);
 
         //右ペインの上下ボタンの設定
         multi_button mb2 = findViewById(R.id.mb2);
@@ -49,8 +49,13 @@ public class MainActivity extends AppCompatActivity {
                 {2,2,2},
                 {2,0,2}
         };
+        String button_txt2[][] = {
+                {"","上",""},
+                {"","",""},
+                {"","下",""}
+        };
         mb2.setXY(disp_w - disp_w/6,disp_h/2);//位置
-        mb2.set_up_this(button2);
+        mb2.set_up_this(button2,button_txt2);
 
         mv.set_up_this(mb1,mb2);
 
