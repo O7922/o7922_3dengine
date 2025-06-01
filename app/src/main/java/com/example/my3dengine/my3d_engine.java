@@ -21,33 +21,25 @@ public class my3d_engine extends View {
     Paint zPaint = new Paint();
     Paint rPaint = new Paint();
 
-    float siya = 200;
+    float siya = 200;//画面にどのくらいの大きさで描画するかの係数
+    float tX0=-919,tY0=1800,tZ0 = -800;//視点の座標
+    double z_rad = 0;//視線の向き(上下)
+    double rad;//視線の向き(左右)
 
-    float tX0=-919,tY0=1800,tZ0 = -800;
-    double z_rad = 0;//プレイヤーの向き
-    double rad;//プレイヤーの向き
+    boolean back_flg,front_flg,left_flg,right_flg,down_flg,up_flg;//移動操作用フラグ。
 
-    double s_z_rad = 0;//視点の向き
-    double s_rad;//視点の向き
+    ArrayList<Polygon> Polygon_List = new ArrayList<Polygon>();//ポリゴンリスト
 
-    boolean back_flg,front_flg,left_flg,right_flg,down_flg,up_flg;
+    float centerX,centerY;//画面の中心の座標
 
-    ArrayList<Polygon> Polygon_List = new ArrayList<Polygon>();
-
-    float centerX,centerY;
-
-    float plX=0,plY=0,plZ=0;//プレイヤー座標
-
-    int uraomote = 1;
-
-    multi_button mb1,mb2;
+    multi_button mb1,mb2;//操作ボタン
 
     public my3d_engine(Context context, AttributeSet attrs) {
         super(context, attrs);
         zPaint.setTextSize(50);
         rPaint.setColor(Color.RED);
 
-
+        //画像の読み込み
         Bitmap bmp = BitmapFactory.decodeResource(getResources(),R.drawable.tile0);
         Bitmap s_bmp = Bitmap.createScaledBitmap(bmp,1024,1024,true);
         Bitmap src_sky = BitmapFactory.decodeResource(getResources(),R.drawable.blue_sky01);
@@ -279,17 +271,20 @@ public class my3d_engine extends View {
         centerX = this.getWidth()/2;
         centerY = this.getHeight()/2;
     }
-
+    //インスタンス生成とタイミングをずらして設定したい処理をココに入れる
     public void set_up_this(multi_button mub1,multi_button mub2){
         mb1 = mub1;mb2 = mub2;
     }
 
+    //メインループ　実際の投資投影計算と描画の実行
     public void onDraw(Canvas canvas){
 
-        invalidate();
+        invalidate();//フレームの更新
+        canvas.drawColor(Color.GRAY);//背景を灰色で塗りつぶし
 
-        canvas.drawColor(Color.GRAY);
-
+        /*
+        視点移動用ボタンが押されたとき用の処理
+         */
         if(mb1.button[0][1] == 1){//前進ボタン
             front_flg = true;
         }else {
@@ -310,7 +305,6 @@ public class my3d_engine extends View {
         }else {
             right_flg = false;
         }
-
         if(mb2.button[0][1] == 1){//上昇ボタン
             up_flg = true;
         }else {
@@ -322,44 +316,41 @@ public class my3d_engine extends View {
             down_flg = false;
         }
 
-        //視点座標操作
+        //実際の視点座標移動
         if(back_flg == true){
             float xsp = (float)(160*Math.cos(rad));
             float ysp = (float)(160*Math.sin(rad));
-            plX+=ysp*uraomote;
-            plY+=xsp*uraomote;
+            tX0+=ysp;
+            tY0+=xsp;
         }
         if(front_flg == true){
             float xsp = (float)(160*Math.cos(rad));
             float ysp = (float)(160*Math.sin(rad));
-            plX-=ysp*uraomote;
-            plY-=xsp*uraomote;
+            tX0-=ysp;
+            tY0-=xsp;
         }
         if(left_flg == true){
             float xsp = (float)(160*Math.cos(rad));
             float ysp = (float)(160*Math.sin(rad));
-            plX-=xsp*uraomote;
-            plY+=ysp*uraomote;
+            tX0-=xsp;
+            tY0+=ysp;
         }
         if(right_flg == true){
             float xsp = (float)(160*Math.cos(rad));
             float ysp = (float)(160*Math.sin(rad));
-            plX+=xsp*uraomote;
-            plY-=ysp*uraomote;
+            tX0+=xsp;
+            tY0-=ysp;
         }
         if(down_flg == true){
-            plZ -= 80;
+            tZ0 -= 80;
         }
         if(up_flg == true){
-            plZ += 80;
+            tZ0 += 80;
         }
 
-        tX0 = plX;
-        tY0 = plY;
-        tZ0 = plZ;
-
-        s_rad = rad;
-        s_z_rad = z_rad;
+        /*
+        ↓↓↓　以下3Dレンダリング　↓↓↓
+         */
 
         //draw_FLG(ソート用)の初期化と、ポリゴンのそれぞれの頂点と視点のユークリッド距離計算
         for(int i = 0; i < Polygon_List.size();i++){
@@ -376,8 +367,8 @@ public class my3d_engine extends View {
                     draw_id = j;
                 }
             }
-            Polygon_List.get(draw_id).draw(canvas);//描画
-            Polygon_List.get(draw_id).draw_FLG = true;//既に描画したものはdraw_FLGをtureに
+            Polygon_List.get(draw_id).draw(canvas);//実際の透視投影計算と描画の実行
+            Polygon_List.get(draw_id).draw_FLG = true;//既に描画したものはdraw_FLGをtureにしてソート対象から除外
         }
 
     }
@@ -388,19 +379,19 @@ public class my3d_engine extends View {
         boolean draw_FLG = false;
 
         Paint pPaint = new Paint();
-        Bitmap texture;
-        int bmp_width,bmp_height;
+        Bitmap texture;//ポリゴンに貼り付ける画像
+        int bmp_width,bmp_height;//元画像のサイズ
 
-        float sa_rad1,sa_rad2,sa_rad3,sa_rad4;
-        float zsa_rad1,zsa_rad2,zsa_rad3,zsa_rad4;
+        float sa_rad1,sa_rad2,sa_rad3,sa_rad4;//"視線"の角度(左右)と、ポリゴンの頂点と"視点"間の角度(左右)の差
+        float zsa_rad1,zsa_rad2,zsa_rad3,zsa_rad4;//"視線"の角度(上下)と、ポリゴンの頂点と"視点"間の角度(上下)の差
         double p_rad,true_p_rad;
         float kx,ky,kz;
         float data[][];
         float data2[][] = new float[6][3];
-        int data_count = 0;
-        int SquareOrTriangle = 1;//三角ポリゴンか四角ポリゴンか
+        int data_count = 0;//頂点の一部が視界の裏側に回り込んだとき用
+        int SquareOrTriangle = 1;//三角ポリゴンか板ポリゴンかを明示する。1に設定すれば三角ポリゴン、2に設定すれば板ポリゴン
         double AVG_Eu;//視点との距離
-        float ptX0,ptY0,ptZ0,ptX1,ptY1,ptZ1,ptX2,ptY2,ptZ2,ptX3=0.1f,ptY3,ptZ3;    //頂点座標
+        float ptX0,ptY0,ptZ0,ptX1,ptY1,ptZ1,ptX2,ptY2,ptZ2,ptX3=0.1f,ptY3,ptZ3;//頂点座標3つ分(板ポリゴンなら4つ分)
 
         public Polygon(float OptX0,float OptY0,float OptZ0,float OptX1,float OptY1,float OptZ1,float OptX2,float OptY2,float OptZ2){
             ptX0 = OptX0; ptY0 = OptY0; ptZ0 = OptZ0;
@@ -408,9 +399,22 @@ public class my3d_engine extends View {
             ptX2 = OptX2; ptY2 = OptY2; ptZ2 = OptZ2;
         }
 
+        //実際の透視投影計算と描画の実行
         public void draw(Canvas canvas){
 
-            //境界線前の処理データ。三次元上で、全ての頂点を視線に合わせる
+            /*
+            ■全体の流れ
+            1. ポリゴンの座標、角度を視点座標に合わせる(ビュー変換)
+            2. カメラの裏側にポリゴンの頂点の一部が回り込んだときの調整(裁断処理)
+            3. ポリゴンの2次元画面への変換を行なう(透視投影)
+            4. テクスチャの貼り付け
+            */
+
+
+            /*
+            正規化処理後の座標が格納される配列。"5"はカメラの裏側にポリゴンの頂点の一部が回り込んだときに裁断処理を入れて、
+            裁断処理後の超点数はいかなるパターンでも5コ以内になるため。"3"はxyzの情報を格納するため。
+             */
             data = new float[5][3];
             data_count = 0;
             //初期化
@@ -419,20 +423,20 @@ public class my3d_engine extends View {
                     data[i][j] = 0;
                 }
             }
-            //視点に頂点を揃える(回転)
+            //視点に頂点を揃える(ビュー変換)
             get_Data(ptX0,ptY0,ptZ0);
             data_count ++;
             get_Data(ptX1,ptY1,ptZ1);
             data_count ++;
             get_Data(ptX2,ptY2,ptZ2);
-            if(ptX3 != 0.1f){
+            if(ptX3 != 0.1f){//いたポリゴンの場合
                 data_count ++;
                 get_Data(ptX3,ptY3,ptZ3);
             }
 
             //視点を中心に移動させることを考えるので、視点は0,0,0と考えればいいので移動する処理は不要。
 
-            //境界線処理済みデータを生成。data2に入る
+            //カメラの裏側にポリゴンの頂点の一部が回り込んだときの調整(裁断処理)
             int d_count = 0;
             data2 = new float[6][3];
             float border_wariai[][] = new float[4][2];
@@ -442,52 +446,52 @@ public class my3d_engine extends View {
             for(int i = 0; i <= data_count; i++){
                 if(data[i][0] < 0){
                     for(int j = 0; j < 3; j ++){
-                        data2[d_count][j] = data [i][j];
+                        data2[d_count][j] = data [i][j];//裁断面が存在しなければ子の座標がこのまま使われる
                     }
                     d_count ++;
                 }
                 float border[] = null;//境界線座標を格納する変数
-                if(i < data_count){//0～末尾の線分はココで処理
-                    border = get_border(data[i][0],data[i][1],data[i][2],data[i+1][0],data[i+1][1],data[i+1][2]);
-                    if(border[0] != 99999){
+                if(i < data_count){//0番目の頂点～末尾の頂点の線分はココで処理
+                    border = get_border(data[i][0],data[i][1],data[i][2],data[i+1][0],data[i+1][1],data[i+1][2]);//裁断面が存在するかのチェック
+                    if(border[0] != 99999){//裁断面が存在する場合
                         for(int j = 0; j < 3; j ++){
-                            data2[d_count][j] = border[j];
+                            data2[d_count][j] = border[j];//裁断面の座標で上書き
                         }
                         d_count ++ ;
-                        border_wariai[i][0]=border[3];
-                        border_wariai[i][1]=border[4];
+                        border_wariai[i][0]=border[3];//どこで裁断が行なわれたのかの割合の記録(x)。テクスチャ貼り付け時に使う
+                        border_wariai[i][1]=border[4];//どこで裁断が行なわれたのかの割合の記録(y)。テクスチャ貼り付け時に使う
                     }
-                }else{//末尾-0の線分はココで処理
-                    border = get_border(data[i][0],data[i][1],data[i][2],data[0][0],data[0][1],data[0][2]);
-                    if(border[0] != 99999){
+                }else{//末尾の頂点 - 0番目の頂点 の線分はココで処理
+                    border = get_border(data[i][0],data[i][1],data[i][2],data[0][0],data[0][1],data[0][2]);//裁断面が存在するかのチェック
+                    if(border[0] != 99999){//裁断面が存在する場合
                         for(int j = 0; j < 3; j ++){
-                            data2[d_count][j] = border[j];
+                            data2[d_count][j] = border[j];//裁断面の座標で上書き
                         }
                         d_count ++ ;
-                        border_wariai[i][0]=border[3];
-                        border_wariai[i][1]=border[4];
+                        border_wariai[i][0]=border[3];//どこで裁断が行なわれたのかの割合の記録(x)。テクスチャ貼り付け時に使う
+                        border_wariai[i][1]=border[4];//どこで裁断が行なわれたのかの割合の記録(y)。テクスチャ貼り付け時に使う
                     }
                 }
 
             }
 
-            //2次元座標に変換しpathクラスを使ってポリゴンを描画する
+            //2次元座標に変換しpathクラスを使ってポリゴンを描画する(透視投影)
             float ans0[];
             Path path = new Path();
             for(int i = 0; i < d_count;i++){
                 ans0 = get_2D_XY(data2[i][0],data2[i][1],data2[i][2]);
-                if(i == 0){
+                if(i == 0){//変換後の頂点1
                     path.moveTo((float)(centerX + ans0[0] * siya),(float)(centerY + ans0[1] * siya));
                     sa_rad1 = centerX + ans0[0] * siya;zsa_rad1=centerY + ans0[1] * siya;
                 }else{
                     path.lineTo((float)(centerX + ans0[0] * siya),(float)(centerY + ans0[1] * siya));
-                    if(i==1){
+                    if(i==1){//変換後の頂点2
                         sa_rad2 = centerX + ans0[0] * siya;zsa_rad2=centerY + ans0[1] * siya;
                     }
-                    if(i==2){
+                    if(i==2){//変換後の頂点3
                         sa_rad3 = centerX + ans0[0] * siya;zsa_rad3=centerY + ans0[1] * siya;
                     }
-                    if(i==3){
+                    if(i==3){//変換後の頂点4
                         sa_rad4 = centerX + ans0[0] * siya;zsa_rad4=centerY + ans0[1] * siya;
                     }
                 }
@@ -499,13 +503,14 @@ public class my3d_engine extends View {
             float sa_radw,zsa_radw;
             pPaint.setShader(null);
             if(texture != null && ((ptX3 != 0.1f && d_count == 4) || (ptX3 == 0.1f && d_count == 3))){
+                //元画像からどの位置を切り抜いてテクスチャとして貼り付けるか
                 float[] src = {
-                        0,0,
-                        bmp_width,0,
-                        bmp_width,bmp_height,
-                        0,bmp_height
+                        0,0,//左上
+                        bmp_width,0,//右上
+                        bmp_width,bmp_height,//右下
+                        0,bmp_height//左下
                 };
-                //境界線の位置に合わせて元画像の切り取る位置を変更
+                //裁断面(境界線)の位置に合わせてテクスチャの元画像の切り取る位置を変更
                 if(border_wariai[0][0] != 1){
                     if(border_wariai[0][1] == 0){
                         src[0] = bmp_width-bmp_width * border_wariai[0][0];
@@ -540,7 +545,7 @@ public class my3d_engine extends View {
                         rotate = true;
                     }
                 }
-                //一方向から見た時だけなぜかテクスチャが回転するからそれを正常に戻す
+                //特定の一方向から見た時だけなぜかテクスチャが回転するからそれを正常に戻す
                 if(rotate == true){
                     sa_radw = sa_rad4;zsa_radw = zsa_rad4;
                     sa_rad4 = sa_rad3;zsa_rad4 = zsa_rad3;
@@ -550,30 +555,32 @@ public class my3d_engine extends View {
                 }
                 //算出した座標をもとにシェーダー生成
                 Matrix matrix = new Matrix();
-                if(ptX3 != 0.1f){//4つの頂点を採用する場合
+                if(ptX3 != 0.1f){//4つの頂点を採用する場合(板ポリゴン)
                     float[] dst = {
                             sa_rad1,zsa_rad1,
                             sa_rad2,zsa_rad2,
                             sa_rad3,zsa_rad3,
                             sa_rad4,zsa_rad4,
                     };
-                    matrix.setPolyToPoly(src, 0, dst, 0, 4);
-                }else{//3つの頂点を採用する場合
+                    matrix.setPolyToPoly(src, 0, dst, 0, 4);//テクスチャの変形
+                }else{//3つの頂点を採用する場合(三角ポリゴン)
                     float[] dst = {
                             sa_rad1,zsa_rad1,
                             sa_rad2,zsa_rad2,
                             sa_rad3,zsa_rad3,
                     };
-                    matrix.setPolyToPoly(src, 0, dst, 0, 3);
+                    matrix.setPolyToPoly(src, 0, dst, 0, 3);//テクスチャの変形
                 }
+
+                //Shader.TileMode.CLAMPは元画像のピクセル範囲を越えてしまったときに端のピクセルを伸ばすオプション。2コ引数に入ってるのはxy用
                 BitmapShader shader00 = new BitmapShader(texture, Shader.TileMode.CLAMP,Shader.TileMode.CLAMP);
-                shader00.setLocalMatrix(matrix);//paintに適用
-                pPaint.setShader(shader00);
+                shader00.setLocalMatrix(matrix);//シェーダーをマトリックスに適用
+                pPaint.setShader(shader00);//Paintにシェーダーを適用
             }
-            canvas.drawPath(path,pPaint);
+            canvas.drawPath(path,pPaint);//描画処理
         }
 
-        //視点の裏側と表側の境界線に線分があれば検知し、境界線の場所でのxyz座標を算出する関数
+        //視点の裏側と表側の境界線に線分があれば検知し、境界線の場所でのxyz座標を算出する関数(裁断処理)
         //視界の裏側の頂点をそのまま計算せず、位置を調整してから計算する
         public float[] get_border(float ptX1,float ptY1,float ptZ1,float ptX2,float ptY2,float ptZ2){
             float ans[] = new float[5];
@@ -595,8 +602,9 @@ public class my3d_engine extends View {
                     kyoukai_wairai = -ptX1 / sabun;
                     ans[4]=1;//一つ目の頂点がマイナスにあれば1
                 }
-                ans[3] = kyoukai_wairai;
-            }else{//任意の二点間の線分に境界線がない場合
+                ans[3] = kyoukai_wairai;//線分の何%のいちに裁断面が発生するか
+            }else{
+                //任意の二点間の線分に境界線がない(カメラの裏側にポリゴンの頂点の片方だけが回り込んでいない)場合99999(問題なし)として返却する
                 ans[0] = 99999;
                 ans[1] = 99999;
                 ans[2] = 99999;
@@ -605,7 +613,7 @@ public class my3d_engine extends View {
             return ans;
         }
 
-        //三次元座標を二次元に投影する関数
+        //三次元座標を二次元に投影する関数(透視投影)
         public float[] get_2D_XY(float ptX,float ptY,float ptZ){
             float ans[] = new float[2];
             float wariaiXY = ptY / (100-ptX);
@@ -619,28 +627,33 @@ public class my3d_engine extends View {
             return ans;
         }
 
-
-        //ポリゴンの頂点座標を視点を中心に回転させて、視線の向きに合わせる関数
-        //[0]にXを、[1]にYを格納
+        //ポリゴンの頂点座標を、視点を中心に回転させて視線の向きに合わせる関数(ビュー変換)
         public void get_Data(float ptX,float ptY,float ptZ){
             float Eu;
             double zsa_radq;
-            //まずはxy上の頂点の位置を視線の角度分引いて0に合わせる
-            p_rad = Math.atan2(tX0 - ptX, tY0 - ptY);
-            true_p_rad = p_rad - s_rad + 1.57;
-            Eu = (float)Math.sqrt((tX0 - ptX)*(tX0 - ptX) + (tY0 - ptY)*(tY0 - ptY));
-            kx = -(float)Math.sin(true_p_rad) * Eu;
-            ky = -(float)Math.cos(true_p_rad) * Eu;
-            //x軸に揃ったので、xとzで角度を出す
-            zsa_radq = Math.atan2(tZ0 - ptZ , -kx) - s_z_rad;
-            Eu = (float)Math.sqrt(kx * kx + (tZ0 - ptZ)*(tZ0 - ptZ));
-            kx = -(float)Math.cos(zsa_radq) * Eu;//zを加味した場合のx。これがないと上下を向いたときにバグる
-            kz = (float)Math.sin(zsa_radq) * Eu;//zを加味した場合のx。これがないと上下を向いたときにバグる
+            /*
+            まずはxy平面上でポリゴンの頂点座標を視点を中心に回転させる
+             */
+            p_rad = Math.atan2(tX0 - ptX, tY0 - ptY);//xy軸における視点とポリゴン頂点の間の角度を求める
+            true_p_rad = p_rad - rad + 1.57;//視線(左右)とxy軸における視点とポリゴン頂点の間の角度の差を求める。"+1.57"が入っているのはなぜか90度計算がずれるのでそのための補正
+            Eu = (float)Math.sqrt((tX0 - ptX)*(tX0 - ptX) + (tY0 - ptY)*(tY0 - ptY));//xy軸上でのユークリッド距離を求める
+            kx = -(float)Math.sin(true_p_rad) * Eu;//xy平面上でポリゴンの頂点座標を視点を中心に回転させる
+            ky = -(float)Math.cos(true_p_rad) * Eu;//xy平面上でポリゴンの頂点座標を視点を中心に回転させる
+
+            /*
+            次にxz平面上でポリゴンの頂点座標を視点を中心に回転させる
+             */
+            zsa_radq = Math.atan2(tZ0 - ptZ , -kx) - z_rad;//xz軸における視点とポリゴン頂点の間の角度を求める。ついでに視線(上下)との差分も求める
+            Eu = (float)Math.sqrt(kx * kx + (tZ0 - ptZ)*(tZ0 - ptZ));//xz軸上でのユークリッド距離を求める
+            kx = -(float)Math.cos(zsa_radq) * Eu;//xz平面上でポリゴンの頂点座標を視点を中心に回転させる
+            kz = (float)Math.sin(zsa_radq) * Eu;//xz平面上でポリゴンの頂点座標を視点を中心に回転させる
+
+            //変換後の座標を配列に格納する。data_countはポリゴンの頂点座標3つ分(板ポリゴンなら4つ分)のうちどの頂点を処理中なのかを表す。
             data[data_count][0] = kx;
             data[data_count][1] = ky;
             data[data_count][2] = kz;
         }
-        //ポリゴンと視点との平均距離を求める関数
+        //視点座標とポリゴンの各頂点の平均ユークリッド距離を求める関数(ポリゴン同士の描画順序の決定に使う。)
         public void get_AVG_Eu(float tX,float tY,float tZ){
             double AVG = (
                     Math.sqrt((tX-ptX0)*(tX-ptX0)+(tY-ptY0)*(tY-ptY0)+(tZ-ptZ0)*(tZ-ptZ0)) +
@@ -672,6 +685,11 @@ public class my3d_engine extends View {
     float oldx,oldy;
     float dx,dy;
     public boolean onTouchEvent(MotionEvent event){
+
+        /*
+        画面をスワイプしたときの視線の変更(上下左右)
+        */
+
         dx = event.getX();
         dy = event.getY();
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
@@ -679,7 +697,7 @@ public class my3d_engine extends View {
             oldy = dy;
         }
         rad -= (dx-oldx)/10000;
-        z_rad += (dy-oldy)/10000 * uraomote;
+        z_rad += (dy-oldy)/10000;
         if(rad>=Math.PI){
             rad=-(Math.PI-0.000001);
         }
