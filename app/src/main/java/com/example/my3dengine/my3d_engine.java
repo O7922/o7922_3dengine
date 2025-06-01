@@ -42,7 +42,7 @@ public class my3d_engine extends View {
         //画像の読み込み
         Bitmap bmp = BitmapFactory.decodeResource(getResources(),R.drawable.tile0);
         Bitmap s_bmp = Bitmap.createScaledBitmap(bmp,1024,1024,true);
-        Bitmap src_sky = BitmapFactory.decodeResource(getResources(),R.drawable.blue_sky01);
+        Bitmap src_sky = BitmapFactory.decodeResource(getResources(),R.drawable.blue_sky02);
         Bitmap sky = Bitmap.createScaledBitmap(src_sky,869,597,true);
         Bitmap src_banmen = BitmapFactory.decodeResource(getResources(),R.drawable.banmen);
         Bitmap banmen = Bitmap.createScaledBitmap(src_banmen,360,360,true);
